@@ -2,6 +2,7 @@ from datetime import datetime
 from termcolor import colored
 from PyInquirer import style_from_dict, Token, prompt
 from matplotlib import pyplot as plt
+from pyfiglet import Figlet
 import requests
 import re
 import pandas as pd
@@ -42,11 +43,21 @@ def get_date_list(start, end):
     elif start_date < end_date: 
         return pd.date_range(start, end).strftime("%Y-%m-%d").tolist()
 
+def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + '-' * (length - filledLength)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    if iteration == total: 
+        print()
+
 def API_fetch(stat, loc, dates):
     url = 'https://api.opencovid.ca/summary'
     vals = []
+    l = len(dates)
 
-    for date in dates:
+    printProgressBar(0, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    for i, date in enumerate(dates):
         params = {
             'stat': stat.replace(" ", "_").lower(),
             'loc': loc,
@@ -73,6 +84,7 @@ def API_fetch(stat, loc, dates):
                         print(colored('Error: no cases have been reported for ' + date + ' yet, please try again later.', 'red'))
                 else:
                     print(colored('Error: entered date has no data available.', 'red'))
+        printProgressBar(i + 1, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
     
     return vals
 
@@ -90,7 +102,7 @@ def validate_date(date, desc):
 
 def get_start_date():
     while(True):
-        start = input("Enter a valid start date or enter 'today' for the current date (YYYY-MM-DD): ")
+        start = input("• Enter a valid start date or enter 'today' for the current date (YYYY-MM-DD): ")
         if start.lower() == 'today': 
             start = datetime.today().strftime("%Y-%m-%d")
 
@@ -98,7 +110,7 @@ def get_start_date():
 
 def get_end_date():
     while(True):
-        end = input("Enter a valid end date or enter 'today' for the current date (YYYY-MM-DD): ")
+        end = input("• Enter a valid end date or enter 'today' for the current date (YYYY-MM-DD): ")
         if end.lower() == 'today':
             end = datetime.today().strftime("%Y-%m-%d")
 
@@ -232,6 +244,11 @@ def main():
         "Nunavut": "NU",
         "Yukon": "YT"
     }
+
+    print("\nThank you for using the")
+    f = Figlet(font='slant')
+    print(colored(f.renderText('COVID Visualizer'), 'blue'), end = "")
+    print("Developed by @bhavanvirs on GitHub\n")
 
     loc, stat = get_loc(province_codes), get_stat()
     start, end = get_start_date(), get_end_date()
