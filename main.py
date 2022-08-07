@@ -13,12 +13,12 @@ colorama.init()
 
 global style 
 style = style_from_dict({
-    Token.Separator: '#0000ff',
+    Token.Separator: '#00FFFF',
     Token.QuestionMark: '',
-    Token.Selected: '#0000ff',
-    Token.Pointer: '#0000ff bold',
+    Token.Selected: '#00FFFF',
+    Token.Pointer: '#00FFFF bold',
     Token.Instruction: '',
-    Token.Answer: '#0000ff bold',
+    Token.Answer: '',
     Token.Question: '',
 })
 
@@ -26,13 +26,14 @@ def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def generate_graph(title, dates, vals, key):
-    x = dates
-    y = vals
-    plt.plot(x, y)
+    x, y = dates, vals
+    ax = plt.axes()
+    ax.grid(True)
     plt.title(title + " in " +  key + " over " + str(len(dates)) + " days")
-    plt.ylabel('Cases')
+    plt.ylabel(title)
     plt.xlabel('Dates')
     plt.gca().xaxis.set_tick_params(rotation = 30, labelsize = 'medium')
+    ax.plot(x, y, marker = '.', markersize = 10)
     plt.show()
 
 def get_date_list(start, end):
@@ -56,7 +57,8 @@ def API_fetch(stat, loc, dates):
     vals = []
     l = len(dates)
 
-    printProgressBar(0, l, prefix = 'Generating graph:', suffix = 'Complete', length = 50)
+    print(colored("\nGenerating graph...", 'cyan'))
+    printProgressBar(0, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
     for i, date in enumerate(dates):
         params = {
             'stat': stat.replace(" ", "_").lower(),
@@ -84,7 +86,7 @@ def API_fetch(stat, loc, dates):
                         print(colored('Error: no cases have been reported for ' + date + ' yet, please try again later.', 'red'))
                 else:
                     print(colored('Error: entered date has no data available.', 'red'))
-        printProgressBar(i + 1, l, prefix = 'Generating graph:', suffix = 'Complete', length = 50)
+        printProgressBar(i + 1, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
     
     return vals
 
@@ -245,18 +247,40 @@ def main():
         "Yukon": "YT"
     }
 
-    print("\nThank you for using the")
-    f = Figlet(font='slant')
-    print(colored(f.renderText('COVID Visualizer'), 'blue'), end = "")
-    print("Developed by @bhavanvirs on GitHub\n")
+    while True:
+        loc, stat = get_loc(province_codes), get_stat()
+        start, end = get_start_date(), get_end_date()
 
-    loc, stat = get_loc(province_codes), get_stat()
-    start, end = get_start_date(), get_end_date()
-    dates = get_date_list(start, end)
-    vals = API_fetch(stat, loc, dates)
-    key = [k for k, v in province_codes.items() if v == loc][0]
-    title = stat.replace("_", " ")
-    generate_graph(title, dates, vals, key)
+        try:
+            if start == datetime.today().strftime("%Y-%m-%d") and end == datetime.today().strftime("%Y-%m-%d"):
+                raise Exception
+        except Exception:
+            print(colored("Error: start and end dates cannot both be 'today'.\n", 'red'))
+            start, end = get_start_date(), get_end_date()
+
+        dates = get_date_list(start, end)
+        vals = API_fetch(stat, loc, dates)
+        key = [k for k, v in province_codes.items() if v == loc][0]
+        title = stat.replace("_", " ")
+        generate_graph(title, dates, vals, key)
+
+        valid_req = False
+
+        while not valid_req:
+            continue_req = input("\nWould you like to continue with a new query (Y/N): ") 
+
+            if continue_req in ['y', 'Y']:
+                valid_req = True
+            elif continue_req in ['n', 'N']:
+                cls()
+                print("\nThank you for using the")
+                f = Figlet(font='slant')
+                print(colored(f.renderText('COVID Visualizer'), 'cyan'), end = "")
+                print("Developed by @bhavanvirs on GitHub\n")
+                exit(1)
+            else:
+                print("Not a valid response, please try again.")
+                valid_req = False
 
 if __name__ == "__main__":
     main()
