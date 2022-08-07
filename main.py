@@ -39,13 +39,18 @@ def find_local(x, y, desc):
 
 def generate_graph(title, dates, vals, key):
     x, y = dates, vals
+    
     ax = plt.axes()
     ax.grid(True)
+
     plt.title(title + " in " +  key + " over " + str(len(dates)) + " days")
+
     plt.ylabel(title)
     plt.xlabel('Dates')
+
     plt.gca().yaxis.set_tick_params(labelsize='small')
     plt.gca().xaxis.set_tick_params(rotation=90, labelsize='small')
+
     ax.plot(x, y, marker = '.', markersize = 10)
     
     x_max, y_max = find_local(x, y, 'max')
