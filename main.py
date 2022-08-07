@@ -25,11 +25,11 @@ style = style_from_dict({
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def generate_graph(dates, vals, key):
+def generate_graph(title, dates, vals, key):
     x = dates
     y = vals
     plt.plot(x, y)
-    plt.title("COVID-19 Cases in " + key + " over " + str(len(dates)) + " days")
+    plt.title(title + " in " +  key + " over " + str(len(dates)) + " days")
     plt.ylabel('Cases')
     plt.xlabel('Dates')
     plt.gca().xaxis.set_tick_params(rotation = 30, labelsize = 'medium')
@@ -255,7 +255,8 @@ def main():
     dates = get_date_list(start, end)
     vals = API_fetch(stat, loc, dates)
     key = [k for k, v in province_codes.items() if v == loc][0]
-    generate_graph(dates, vals, key)
+    title = stat.replace("_", " ")
+    generate_graph(title, dates, vals, key)
 
 if __name__ == "__main__":
     main()
