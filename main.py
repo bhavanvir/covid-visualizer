@@ -1,6 +1,9 @@
 from datetime import datetime
 from termcolor import colored
-from PyInquirer import style_from_dict, Token, prompt, Separator
+from PyInquirer import style_from_dict, Token, prompt
+from matplotlib import pyplot as plt
+import requests
+import re
 import pandas as pd
 import os
 import colorama
@@ -21,6 +24,16 @@ style = style_from_dict({
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+def generate_graph(dates, vals, key):
+    x = dates
+    y = vals
+    plt.plot(x, y)
+    plt.title("COVID-19 Cases in " + key + " over " + str(len(dates)) + " days")
+    plt.ylabel('Cases')
+    plt.xlabel('Dates')
+    plt.gca().xaxis.set_tick_params(rotation = 30, labelsize = 'medium')
+    plt.show()
+
 def get_date_list(start, end):
     start_date = datetime.strptime(start, "%Y-%m-%d")
     end_date = datetime.strptime(end, "%Y-%m-%d")
@@ -29,28 +42,72 @@ def get_date_list(start, end):
     elif start_date < end_date: 
         return pd.date_range(start, end).strftime("%Y-%m-%d").tolist()
 
-def validate_format(date):
+def API_fetch(stat, loc, dates):
+    url = 'https://api.opencovid.ca/summary'
+    vals = []
+
+    for date in dates:
+        params = {
+            'stat': stat.replace(" ", "_").lower(),
+            'loc': loc,
+            'date': date
+        }
+
+        response = requests.get(url, params=params)
+
+        if response.status_code != 200:
+            output_string = re.search(r'(?<=\:).*[^}]', response.text)
+            print("An error has occured with code: ", response)
+            print("Corresponding to: ", output_string.group()) 
+            print("Paramaters input: ", params)
+        else:
+            data = response.json()
+            wanted_stat = stat.replace(" ", "_").lower()
+
+            try:
+                if len(data['data'][0]) != 0:
+                    wanted_val = int(data['data'][0][wanted_stat])
+                    vals.append(wanted_val)
+            except IndexError:
+                if date == datetime.today().strftime('%Y-%m-%d'):
+                        print(colored('Error: no cases have been reported for ' + date + ' yet, please try again later.', 'red'))
+                else:
+                    print(colored('Error: entered date has no data available.', 'red'))
+    
+    return vals
+
+def validate_date(date, desc):
     try:
-        datetime.strptime(date, "%Y-%m-%d")
+        if date != datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m-%d"):
+            raise ValueError
+        return date
     except ValueError:
-        print("Error: specified date is not in the correct format (YYYY-MM-DD).\n")
-        get_dates()
+        print((colored('Error: ' + date + ' is not in the correct format (YYYY-MM-DD).\n', 'red')))
+        if desc == 'start':
+            return get_start_date()
+        else:
+            return get_end_date()
 
-def get_dates():
-    start = input("Enter start date (YYYY-MM-DD): ")
-    validate_format(start)
-    end = input("Enter end date (YYYY-MM-DD): ")
-    validate_format(end)
+def get_start_date():
+    while(True):
+        start = input("Enter a valid start date or enter 'today' for the current date (YYYY-MM-DD): ")
+        if start.lower() == 'today': 
+            start = datetime.today().strftime("%Y-%m-%d")
 
-    return start, end
+        return validate_date(start, 'start')
 
-def get_data(date_list):
-    pass
+def get_end_date():
+    while(True):
+        end = input("Enter a valid end date or enter 'today' for the current date (YYYY-MM-DD): ")
+        if end.lower() == 'today':
+            end = datetime.today().strftime("%Y-%m-%d")
+
+        return validate_date(end, 'end')
 
 def get_loc(province_codes):
     questions = [
         {
-            'type': 'checkbox',
+            'type': 'list',
             'qmark': '•',
             'message': 'Please select a province:',
             'name': 'province',
@@ -99,11 +156,7 @@ def get_loc(province_codes):
     ]
     try:
         answers = prompt(questions, style=style)
-        answers['province'][0]
-        codes = []
-        for province in answers['province']:
-            codes.append(province_codes[province])
-        return codes
+        return province_codes[answers['province']]
     except IndexError:
         print(colored('Error: you must select at least one province.\n', 'red'))
         return get_loc(province_codes)
@@ -111,40 +164,35 @@ def get_loc(province_codes):
 def get_stat():
     questions = [
         {
-            'type': 'checkbox',
+            'type': 'list',
             'qmark': '•',
             'message': 'Please select a statistic:',
             'name': 'statistic',
             'choices': [
-                Separator('Cases'),
                 {
                     'name': 'Cases',
                 },
                 {
                     'name': 'Cases Daily',
                 },
-                Separator('Deaths'),
                 {
                     'name': 'Deaths',
                 },
                 {
                     'name': 'Deaths Daily',
                 },
-                Separator('Hospitalizations'),
                 {
                     'name': 'Hospitalizations',
                 },
                 {
                     'name': 'Hospitalizations Daily',
                 },
-                Separator('Tests'),
                 {
                     'name': 'Tests Completed',
                 },
                 {
                     'name': 'Tests Completed Daily',
                 },
-                Separator('Vaccine Administration'),
                 {
                     'name': 'Vaccine Administration Dose 1',
                 },
@@ -162,7 +210,6 @@ def get_stat():
     ]
     try:
         answers = prompt(questions, style=style)
-        answers['statistic'][0]
         return answers['statistic']
     except IndexError:
         cls()
@@ -186,9 +233,12 @@ def main():
         "Yukon": "YT"
     }
 
-    start, end = get_dates()
+    loc, stat = get_loc(province_codes), get_stat()
+    start, end = get_start_date(), get_end_date()
     dates = get_date_list(start, end)
-    print(dates)
+    vals = API_fetch(stat, loc, dates)
+    key = [k for k, v in province_codes.items() if v == loc][0]
+    generate_graph(dates, vals, key)
 
 if __name__ == "__main__":
     main()
