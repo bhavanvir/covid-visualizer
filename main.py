@@ -25,6 +25,18 @@ style = style_from_dict({
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+def find_local(x, y, desc):
+    x_cord, y_cord = [], []
+
+    for x_pos, y_pos in zip(x, y):
+        if desc == 'max' and y_pos == max(y):
+            x_cord.append(x_pos)
+            y_cord.append(y_pos)
+        elif desc == 'min' and y_pos == min(y):
+            x_cord.append(x_pos)
+            y_cord.append(y_pos)
+    return x_cord[0], y_cord[0]
+
 def generate_graph(title, dates, vals, key):
     x, y = dates, vals
     ax = plt.axes()
@@ -32,8 +44,16 @@ def generate_graph(title, dates, vals, key):
     plt.title(title + " in " +  key + " over " + str(len(dates)) + " days")
     plt.ylabel(title)
     plt.xlabel('Dates')
-    plt.gca().xaxis.set_tick_params(rotation = 30, labelsize = 'medium')
+    plt.gca().yaxis.set_tick_params(labelsize='small')
+    plt.gca().xaxis.set_tick_params(rotation=90, labelsize='small')
     ax.plot(x, y, marker = '.', markersize = 10)
+    
+    x_max, y_max = find_local(x, y, 'max')
+    plt.plot(x_max, y_max, "gD", label = 'local max: ' + str(y_max) + ' on ' + str(x_max))
+    x_min, y_min = find_local(x, y, 'min')
+    plt.plot(x_min, y_min, "rD", label = 'local min: ' + str(y_min) + ' on ' + str(x_min))
+
+    plt.legend()
     plt.show()
 
 def get_date_list(start, end):
@@ -58,7 +78,7 @@ def API_fetch(stat, loc, dates):
     l = len(dates)
 
     print(colored("\nGenerating graph...", 'cyan'))
-    printProgressBar(0, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50)
     for i, date in enumerate(dates):
         params = {
             'stat': stat.replace(" ", "_").lower(),
@@ -86,7 +106,7 @@ def API_fetch(stat, loc, dates):
                         print(colored('Error: no cases have been reported for ' + date + ' yet, please try again later.', 'red'))
                 else:
                     print(colored('Error: entered date has no data available.', 'red'))
-        printProgressBar(i + 1, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+        printProgressBar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
     
     return vals
 
