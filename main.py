@@ -56,7 +56,7 @@ def API_fetch(stat, loc, dates):
     vals = []
     l = len(dates)
 
-    printProgressBar(0, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+    printProgressBar(0, l, prefix = 'Generating graph:', suffix = 'Complete', length = 50)
     for i, date in enumerate(dates):
         params = {
             'stat': stat.replace(" ", "_").lower(),
@@ -84,7 +84,7 @@ def API_fetch(stat, loc, dates):
                         print(colored('Error: no cases have been reported for ' + date + ' yet, please try again later.', 'red'))
                 else:
                     print(colored('Error: entered date has no data available.', 'red'))
-        printProgressBar(i + 1, l, prefix = 'Progress:', suffix = 'Complete', length = 50)
+        printProgressBar(i + 1, l, prefix = 'Generating graph:', suffix = 'Complete', length = 50)
     
     return vals
 
