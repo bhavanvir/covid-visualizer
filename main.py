@@ -310,7 +310,7 @@ def main():
                 print("Developed by @bhavanvirs on GitHub\n")
                 exit(1)
             else:
-                print("Not a valid response, please try again.")
+                print(colored("Error: not a valid response, please try again.", 'red'))
                 valid_req = False
 
 if __name__ == "__main__":
