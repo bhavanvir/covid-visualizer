@@ -1,7 +1,7 @@
 from datetime import datetime
 from termcolor import colored
 from PyInquirer import style_from_dict, Token, prompt
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, ticker
 from pyfiglet import Figlet
 import requests
 import re
@@ -43,21 +43,24 @@ def generate_graph(title, dates, vals, key):
     ax = plt.axes()
     ax.grid(True)
 
-    plt.title(title + " in " +  key + " over " + str(len(dates)) + " days")
-
+    plt.title(title + " in " +  key + " over " + str(len(dates)) + " days from " + dates[0] + " to " + dates[len(dates) - 1])
     plt.ylabel(title)
     plt.xlabel('Dates')
 
-    plt.gca().yaxis.set_tick_params(labelsize='small')
-    plt.gca().xaxis.set_tick_params(rotation=90, labelsize='small')
+    plt.gca().yaxis.set_tick_params(labelsize='medium')
+
+    plt.gca().xaxis.set_tick_params(rotation=45, labelsize='medium')
+    locator = ticker.MaxNLocator(60)
+    ax.xaxis.set_major_locator(locator)
 
     ax.plot(x, y, marker = '.', markersize = 10)
     
     x_max, y_max = find_local(x, y, 'max')
-    plt.plot(x_max, y_max, "gD", label = 'local max: ' + str(y_max) + ' on ' + str(x_max))
+    plt.plot(x_max, y_max, "gD", label = 'local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
     x_min, y_min = find_local(x, y, 'min')
-    plt.plot(x_min, y_min, "rD", label = 'local min: ' + str(y_min) + ' on ' + str(x_min))
-
+    plt.plot(x_min, y_min, "rD", label = 'local min: ' + f'{y_min:,}' + ' on ' + str(x_min))
+    
+    plt.tight_layout()
     plt.legend()
     plt.show()
 
