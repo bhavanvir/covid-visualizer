@@ -89,6 +89,7 @@ def API_fetch(stat, loc, dates):
 
     params = {
             'after': min(dates),
+            'before': max(dates),
             'stat': stat.replace(" ", "_").lower(),
             'loc': loc,
         }
