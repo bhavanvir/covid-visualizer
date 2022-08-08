@@ -62,6 +62,9 @@ def generate_graph(title, dates, vals, key):
     
     plt.tight_layout()
     plt.legend()
+
+    mng = plt.get_current_fig_manager()
+    mng.window.state('zoomed')
     plt.show()
 
 def get_date_list(start, end):
