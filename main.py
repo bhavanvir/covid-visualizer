@@ -85,40 +85,38 @@ def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, 
 
 def API_fetch(stat, loc, dates):
     url = 'https://api.opencovid.ca/summary'
-    vals = []
-    l = len(dates)
+    vals, l = [], len(dates)
 
-    print(colored("\nGenerating graph...", 'cyan'))
-    printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50)
-    for i, date in enumerate(dates):
-        params = {
+    params = {
+            'after': min(dates),
             'stat': stat.replace(" ", "_").lower(),
             'loc': loc,
-            'date': date
         }
-
-        response = requests.get(url, params=params)
-
-        if response.status_code != 200:
+    
+    response = requests.get(url, params=params)
+    if response.status_code != 200:
             output_string = re.search(r'(?<=\:).*[^}]', response.text)
             print("An error has occured with code: ", response)
             print("Corresponding to: ", output_string.group()) 
             print("Paramaters input: ", params)
-        else:
-            data = response.json()
-            wanted_stat = stat.replace(" ", "_").lower()
+    else:
+        data = response.json()
+        wanted_stat = stat.replace(" ", "_").lower()
 
-            try:
-                if len(data['data'][0]) != 0:
-                    wanted_val = int(data['data'][0][wanted_stat])
+        try:
+            print(colored("\nGenerating graph...", 'cyan'))
+            printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50)
+            for i, item in enumerate(data['data']):
+                if item['date'] in dates:
+                    wanted_val = int(item[wanted_stat])
                     vals.append(wanted_val)
-            except IndexError:
-                if date == datetime.today().strftime('%Y-%m-%d'):
-                        print(colored('Error: no cases have been reported for ' + date + ' yet, please try again later.', 'red'))
-                else:
-                    print(colored('Error: entered date has no data available.', 'red'))
-        printProgressBar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
-    
+                printProgressBar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
+        except IndexError:
+            if item['date'] == datetime.today().strftime('%Y-%m-%d'):
+                    print(colored('Error: no cases have been reported for ' + item['date'] + ' yet, please try again later.', 'red'))
+            else:
+                print(colored('Error: entered date has no data available.', 'red'))
+
     return vals
 
 def validate_date(date, desc):
