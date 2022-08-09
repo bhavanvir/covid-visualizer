@@ -1,5 +1,5 @@
 from datetime import datetime
-from termcolor import colored
+from termcolor import colored, cprint
 from PyInquirer import style_from_dict, Token, prompt, Separator
 from matplotlib import pyplot as plt, ticker
 from pyfiglet import Figlet
@@ -39,6 +39,25 @@ province_codes = {
     'NL': 'Newfoundland and Labrador'
 }
 
+global statistic_codes
+statistic_codes = {
+    'cases': 'Cases',
+    'cases_daily': 'Cases Daily',
+    'deaths': 'Deaths',
+    'deaths_daily': 'Deaths Daily',
+    'hospitalizations': 'Hospitalizations',
+    'hospitalizations_daily': 'Hospitalizations Daily',
+    'icu': 'ICU',
+    'icu_daily': 'ICU Daily',
+    'tests_completed': 'Tests Completed',
+    'tests_completed_daily': 'Tests Completed Daily',
+    'vaccine_administration_dose_1': 'Vaccine Administration Dose 1',
+    'vaccine_administration_dose_2': 'Vaccine Administration Dose 2',
+    'vaccine_administration_dose_3': 'Vaccine Administration Dose 3',
+    'vaccine_administration_total_doses': 'Vaccine Administration Total Doses',
+    'vaccine_administration_total_doses_daily': 'Vaccine Administration Total Doses Daily',
+}
+
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -54,13 +73,13 @@ def find_local_max(x, y):
 
 def generate_graph(stat, dates, vals, loc):
     x, y = dates, vals
-    prov = [v for k, v in province_codes.items() if k == loc][0]
-    stat = stat.replace("_", " ").title()
+    loc = [v for k, v in province_codes.items() if k == loc][0]
+    stat = [v for k, v in statistic_codes.items() if k == stat][0]
     
     ax = plt.axes()
     ax.grid(True)
 
-    plt.title(stat + " in " +  prov + " over " + str(len(dates)) + " days from " + dates[0] + " to " + dates[len(dates) - 1])
+    plt.title(stat + " in " +  loc + " over " + str(len(dates)) + " days from " + dates[0] + " to " + dates[len(dates) - 1])
     plt.ylabel(stat)
     plt.xlabel('Dates')
 
@@ -70,12 +89,12 @@ def generate_graph(stat, dates, vals, loc):
     locator = ticker.MaxNLocator(60)
     ax.xaxis.set_major_locator(locator)
 
-    ax.plot(x, y, marker = '.', markersize = 10)
+    ax.plot(x, y, marker='.')
     
     x_min, y_min = find_local_min(x, y)
-    plt.plot(x_min, y_min, "rD", label = 'local min: ' + f'{y_min:,}' + ' on ' + str(x_min))
+    plt.plot(x_min, y_min, "gD", label='local min: ' + f'{y_min:,}' + ' on ' + str(x_min))
     x_max, y_max = find_local_max(x, y)
-    plt.plot(x_max, y_max, "gD", label = 'local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
+    plt.plot(x_max, y_max, "rD", label='local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
     
     plt.tight_layout()
     plt.legend()
@@ -93,15 +112,15 @@ def get_date_list(start, end):
     elif start_date < end_date: 
         return pd.date_range(start, end).strftime("%Y-%m-%d").tolist()
 
-def printProgressBar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
+def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd = "\r"):
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end = printEnd)
+    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
     if iteration == total: 
         print()
 
-def API_fetch(stat, loc, dates):
+def fetch_api_data(stat, loc, dates):
     url = 'https://api.opencovid.ca/summary'
     vals, l = [], len(dates)
 
@@ -114,22 +133,23 @@ def API_fetch(stat, loc, dates):
     
     response = requests.get(url, params=params)
     if response.status_code != 200:
-            output_string = re.search(r'(?<=\:).*[^}]', response.text)
-            print("An error has occured with code: ", response)
-            print("Corresponding to: ", output_string.group()) 
-            print("Paramaters input: ", params)
+        output_string = re.search(r'(?<=\:).*[^}]', response.text)
+        cls()
+        print(colored('Error: paramaters input ' + '\'' + str(params) + '\'', 'red', attrs=['bold']))
+        print(colored('Error: response with code ' + '\'' + str(response.status_code) + '\'' + ' corresponding to ' + '\'' + output_string.group().strip("\"") + '.\'', 'red', attrs=['bold']))
+        exit(1)
     else:
         data = response.json()
 
         print(colored("\nGenerating graph...", 'cyan'))
-        printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50)
+        print_progress_bar(0, l, prefix='Progress:', suffix='Complete', length=50)
         
         for i, item in enumerate(data['data']):
             if item['date'] in dates:
                 wanted_val = int(item[stat])
                 vals.append(wanted_val)
                 
-            printProgressBar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
+            print_progress_bar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
 
     return vals
 
@@ -139,7 +159,7 @@ def validate_date(date, desc):
             raise ValueError
         return date
     except ValueError:
-        print((colored('Error: ' + '\'' + date + '\'' + ' is not in the correct format (YYYY-MM-DD).\n', 'red')))
+        print((colored('Error: ' + '\'' + date + '\'' + ' is not in the correct format (YYYY-MM-DD).\n', 'red', attrs=['bold'])))
         if desc == 'start':
             return get_start_date()
         else:
@@ -231,7 +251,8 @@ def get_loc():
         answers = prompt(questions, style=style)
         return answers['province']
     except IndexError:
-        print(colored('Error: you must select at least one province.\n', 'red'))
+        cls()
+        print(colored('Error: you must select at least one province.\n', 'red', attrs=['bold']))
         return get_loc()
 
 def get_stat():
@@ -316,7 +337,7 @@ def get_stat():
         return answers['statistic']
     except IndexError:
         cls()
-        print(colored('Error: you must select at least one statistic.\n', 'red'))
+        print(colored('Error: you must select at least one statistic.\n', 'red', attrs=['bold']))
         return get_stat()
 
 def main():
@@ -339,18 +360,18 @@ def main():
                 raise Exception
         except Exception:
             if same_condition:
-                print(colored("Error: start and end dates cannot both be the same.\n", 'red'))
+                print(colored("Error: start and end dates cannot both be the same.\n", 'red', attrs=['bold']))
             elif early_condition or late_condition:
                 if start < earliest_date and end >= earliest_date or start > latest_date and end <= latest_date:
-                    print(colored('Error: entered start date ' + '\'' + start + '\'' + ' has no data available.\n', 'red'))
+                    print(colored('Error: entered start date ' + '\'' + start + '\'' + ' has no data available.\n', 'red', attrs=['bold']))
                 elif end < earliest_date and start >= earliest_date or end > latest_date and start <= latest_date:
-                    print(colored('Error: entered end date ' + '\'' + end + '\'' + ' has no data available.\n', 'red'))
+                    print(colored('Error: entered end date ' + '\'' + end + '\'' + ' has no data available.\n', 'red', attrs=['bold']))
                 else:
-                    print(colored('Error: entered start and end dates, ' + '\'' + start + '\'' + " and "  + end +', have no data available. \n', 'red'))
+                    print(colored('Error: entered start and end dates, ' + '\'' + start + '\'' + " and "  + end +', have no data available. \n', 'red', attrs=['bold']))
             continue
 
         dates = get_date_list(start, end)
-        vals = API_fetch(stat, loc, dates)
+        vals = fetch_api_data(stat, loc, dates)
         generate_graph(stat, dates, vals, loc)
 
         valid_req = False
@@ -368,7 +389,7 @@ def main():
                 print("Developed by @bhavanvirs on GitHub\n")
                 exit(1)
             else:
-                print(colored('Error: ' + '\'' + continue_req + '\'' ' is not a valid response.', 'red'))
+                print(colored('Error: ' + '\'' + continue_req + '\'' ' is not a valid response.', 'red', attrs=['bold']))
                 valid_req = False
 
 if __name__ == "__main__":
