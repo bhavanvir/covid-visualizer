@@ -22,6 +22,23 @@ style = style_from_dict({
     Token.Question: '',
 })
 
+global province_codes
+province_codes = {
+        'YT': 'Yukon',
+        'NT': 'Northwest Territories',
+        'NU': 'Nunavut',
+        'BC': 'British Columbia',
+        'AB': 'Alberta',
+        'SK': 'Saskatchewan',
+        'MB': 'Manitoba',
+        'ON': 'Ontario',
+        'QC': 'Quebec',
+        'NB': 'New Brunswick',
+        'NS': 'Nova Scotia',
+        'PE': 'Prince Edward Island',
+        'NL': 'Newfoundland and Labrador'
+    }
+
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
@@ -35,14 +52,16 @@ def find_local_max(x, y):
         if y_i == max(y):
             return x_i, y_i
 
-def generate_graph(title, dates, vals, key):
+def generate_graph(stat, dates, vals, loc):
     x, y = dates, vals
+    prov = [v for k, v in province_codes.items() if k == loc][0]
+    stat = stat.replace("_", " ").title()
     
     ax = plt.axes()
     ax.grid(True)
 
-    plt.title(title + " in " +  key + " over " + str(len(dates)) + " days from " + dates[0] + " to " + dates[len(dates) - 1])
-    plt.ylabel(title)
+    plt.title(stat + " in " +  prov + " over " + str(len(dates)) + " days from " + dates[0] + " to " + dates[len(dates) - 1])
+    plt.ylabel(stat)
     plt.xlabel('Dates')
 
     plt.gca().yaxis.set_tick_params(labelsize='medium')
@@ -301,24 +320,8 @@ def get_stat():
         return get_stat()
 
 def main():
-    province_codes = {
-        'YT': 'Yukon',
-        'NT': 'Northwest Territories',
-        'NU': 'Nunavut',
-        'BC': 'British Columbia',
-        'AB': 'Alberta',
-        'SK': 'Saskatchewan',
-        'MB': 'Manitoba',
-        'ON': 'Ontario',
-        'QC': 'Quebec',
-        'NB': 'New Brunswick',
-        'NS': 'Nova Scotia',
-        'PE': 'Prince Edward Island',
-        'NL': 'Newfoundland and Labrador'
-    }
-
     loc, stat = get_loc(), get_stat()
-    print(stat)
+
     while True:
         start, end = get_start_date(), get_end_date()
         earliest_date = '2020-01-01'
@@ -348,9 +351,7 @@ def main():
 
         dates = get_date_list(start, end)
         vals = API_fetch(stat, loc, dates)
-        key = [v for k, v in province_codes.items() if k == loc][0]
-        title = stat.replace("_", " ").title()
-        generate_graph(title, dates, vals, key)
+        generate_graph(stat, dates, vals, loc)
 
         valid_req = False
         while not valid_req:
@@ -361,7 +362,7 @@ def main():
                 main()
             elif continue_req in ['n', 'N']:
                 cls()
-                print("\nThank you for using the")
+                print("\nThank you for using")
                 f = Figlet(font='slant')
                 print(colored(f.renderText('COVID Visualizer'), 'cyan'), end = "")
                 print("Developed by @bhavanvirs on GitHub\n")
