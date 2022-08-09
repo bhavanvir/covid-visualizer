@@ -30,8 +30,8 @@ COVID-Visualizer uses the [COVID-19 Canada Open Data Working Group API](https://
 - **deaths_daily**
 - **hospitalizations**
 - **hospitalizations_daily**
-- icu
-- icu_daily
+- **icu**
+- **icu_daily**
 - **tests_completed**
 - **tests_completed_daily**
 - **vaccine_coverage_dose_1**
@@ -43,7 +43,7 @@ COVID-Visualizer uses the [COVID-19 Canada Open Data Working Group API](https://
 - vaccine_coverage_dose_4
 - vaccine_coverage_dose_4_daily
 - **vaccine_administration_total_doses**
-- vaccine_administration_total_doses_daily
+- **vaccine_administration_total_doses_daily**
 - vaccine_administration_dose_1
 - vaccine_administration_dose_1_daily
 - vaccine_administration_dose_2
