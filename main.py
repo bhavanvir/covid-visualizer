@@ -24,20 +24,20 @@ style = style_from_dict({
 
 global province_codes
 province_codes = {
-        'YT': 'Yukon',
-        'NT': 'Northwest Territories',
-        'NU': 'Nunavut',
-        'BC': 'British Columbia',
-        'AB': 'Alberta',
-        'SK': 'Saskatchewan',
-        'MB': 'Manitoba',
-        'ON': 'Ontario',
-        'QC': 'Quebec',
-        'NB': 'New Brunswick',
-        'NS': 'Nova Scotia',
-        'PE': 'Prince Edward Island',
-        'NL': 'Newfoundland and Labrador'
-    }
+    'YT': 'Yukon',
+    'NT': 'Northwest Territories',
+    'NU': 'Nunavut',
+    'BC': 'British Columbia',
+    'AB': 'Alberta',
+    'SK': 'Saskatchewan',
+    'MB': 'Manitoba',
+    'ON': 'Ontario',
+    'QC': 'Quebec',
+    'NB': 'New Brunswick',
+    'NS': 'Nova Scotia',
+    'PE': 'Prince Edward Island',
+    'NL': 'Newfoundland and Labrador'
+}
 
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
