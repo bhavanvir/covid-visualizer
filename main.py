@@ -25,17 +25,15 @@ style = style_from_dict({
 def cls():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def find_local(x, y, desc):
-    x_cord, y_cord = [], []
+def find_local_min(x, y):
+    for x_i, y_i in zip(x, y):
+        if y_i == min(y):
+            return x_i, y_i
 
-    for x_pos, y_pos in zip(x, y):
-        if desc == 'max' and y_pos == max(y):
-            x_cord.append(x_pos)
-            y_cord.append(y_pos)
-        elif desc == 'min' and y_pos == min(y):
-            x_cord.append(x_pos)
-            y_cord.append(y_pos)
-    return x_cord[0], y_cord[0]
+def find_local_max(x, y):
+    for x_i, y_i in zip(x, y):
+        if y_i == max(y):
+            return x_i, y_i
 
 def generate_graph(title, dates, vals, key):
     x, y = dates, vals
@@ -48,23 +46,24 @@ def generate_graph(title, dates, vals, key):
     plt.xlabel('Dates')
 
     plt.gca().yaxis.set_tick_params(labelsize='medium')
-
     plt.gca().xaxis.set_tick_params(rotation=45, labelsize='medium')
+
     locator = ticker.MaxNLocator(60)
     ax.xaxis.set_major_locator(locator)
 
     ax.plot(x, y, marker = '.', markersize = 10)
     
-    x_max, y_max = find_local(x, y, 'max')
-    plt.plot(x_max, y_max, "gD", label = 'local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
-    x_min, y_min = find_local(x, y, 'min')
+    x_min, y_min = find_local_min(x, y)
     plt.plot(x_min, y_min, "rD", label = 'local min: ' + f'{y_min:,}' + ' on ' + str(x_min))
+    x_max, y_max = find_local_max(x, y)
+    plt.plot(x_max, y_max, "gD", label = 'local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
     
     plt.tight_layout()
     plt.legend()
 
     mng = plt.get_current_fig_manager()
     mng.window.state('zoomed')
+    
     plt.show()
 
 def get_date_list(start, end):
@@ -107,6 +106,7 @@ def API_fetch(stat, loc, dates):
         try:
             print(colored("\nGenerating graph...", 'cyan'))
             printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50)
+            
             for i, item in enumerate(data['data']):
                 if item['date'] in dates:
                     wanted_val = int(item[wanted_stat])
@@ -277,16 +277,30 @@ def main():
         "Yukon": "YT"
     }
 
-    while True:
-        loc, stat = get_loc(province_codes), get_stat()
-        start, end = get_start_date(), get_end_date()
+    loc, stat = get_loc(province_codes), get_stat()
 
+    while True:
+        start, end = get_start_date(), get_end_date()
+        earliest_record = '2020-01-01'
+        condition = False
         try:
-            if start == datetime.today().strftime("%Y-%m-%d") and end == datetime.today().strftime("%Y-%m-%d"):
+            if start == end:
+                condition = True
+                raise Exception
+            elif start < earliest_record or end < earliest_record:
+                condition = False
                 raise Exception
         except Exception:
-            print(colored("Error: start and end dates cannot both be 'today'.\n", 'red'))
-            start, end = get_start_date(), get_end_date()
+            if condition:
+                print(colored("Error: start and end dates cannot both be the same.\n", 'red'))
+            elif not condition:
+                if start < earliest_record and end >= earliest_record:
+                    print(colored('Error: entered start date ' + start + ' has no data available.\n', 'red'))
+                elif end < earliest_record and start >= earliest_record:
+                    print(colored('Error: entered end date ' + end + ' has no data available.\n', 'red'))
+                else:
+                    print(colored('Error: entered start and end dates, ' + start + " and "  + end +', have no data available. \n', 'red'))
+            continue
 
         dates = get_date_list(start, end)
         vals = API_fetch(stat, loc, dates)
