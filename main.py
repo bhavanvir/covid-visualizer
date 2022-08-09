@@ -103,20 +103,15 @@ def API_fetch(stat, loc, dates):
         data = response.json()
         wanted_stat = stat.replace(" ", "_").lower()
 
-        try:
-            print(colored("\nGenerating graph...", 'cyan'))
-            printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50)
-            
-            for i, item in enumerate(data['data']):
-                if item['date'] in dates:
-                    wanted_val = int(item[wanted_stat])
-                    vals.append(wanted_val)
-                printProgressBar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
-        except IndexError:
-            if item['date'] == datetime.today().strftime('%Y-%m-%d'):
-                    print(colored('Error: no cases have been reported for ' + item['date'] + ' yet, please try again later.', 'red'))
-            else:
-                print(colored('Error: entered date has no data available.', 'red'))
+        print(colored("\nGenerating graph...", 'cyan'))
+        printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50)
+        
+        for i, item in enumerate(data['data']):
+            if item['date'] in dates:
+                wanted_val = int(item[wanted_stat])
+                vals.append(wanted_val)
+                
+            printProgressBar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
 
     return vals
 
@@ -126,7 +121,7 @@ def validate_date(date, desc):
             raise ValueError
         return date
     except ValueError:
-        print((colored('Error: ' + date + ' is not in the correct format (YYYY-MM-DD).\n', 'red')))
+        print((colored('Error: ' + '\'' + date + '\'' + ' is not in the correct format (YYYY-MM-DD).\n', 'red')))
         if desc == 'start':
             return get_start_date()
         else:
@@ -281,25 +276,29 @@ def main():
 
     while True:
         start, end = get_start_date(), get_end_date()
-        earliest_record = '2020-01-01'
-        condition = False
+        earliest_date = '2020-01-01'
+        latest_date = datetime.today().strftime('%Y-%m-%d')
+        same_condition, early_condition, late_condition = False, False, False
         try:
             if start == end:
-                condition = True
+                same_condition = True
                 raise Exception
-            elif start < earliest_record or end < earliest_record:
-                condition = False
+            elif start < earliest_date or end < earliest_date:
+                early_condition = True
+                raise Exception
+            elif start > latest_date or end > latest_date:
+                late_condition = True
                 raise Exception
         except Exception:
-            if condition:
+            if same_condition:
                 print(colored("Error: start and end dates cannot both be the same.\n", 'red'))
-            elif not condition:
-                if start < earliest_record and end >= earliest_record:
-                    print(colored('Error: entered start date ' + start + ' has no data available.\n', 'red'))
-                elif end < earliest_record and start >= earliest_record:
-                    print(colored('Error: entered end date ' + end + ' has no data available.\n', 'red'))
+            elif early_condition or late_condition:
+                if start < earliest_date and end >= earliest_date or start > latest_date and end <= latest_date:
+                    print(colored('Error: entered start date ' + '\'' + start + '\'' + ' has no data available.\n', 'red'))
+                elif end < earliest_date and start >= earliest_date or end > latest_date and start <= latest_date:
+                    print(colored('Error: entered end date ' + '\'' + end + '\'' + ' has no data available.\n', 'red'))
                 else:
-                    print(colored('Error: entered start and end dates, ' + start + " and "  + end +', have no data available. \n', 'red'))
+                    print(colored('Error: entered start and end dates, ' + '\'' + start + '\'' + " and "  + end +', have no data available. \n', 'red'))
             continue
 
         dates = get_date_list(start, end)
@@ -323,7 +322,7 @@ def main():
                 print("Developed by @bhavanvirs on GitHub\n")
                 exit(1)
             else:
-                print(colored("Error: not a valid response, please try again.", 'red'))
+                print(colored('Error: ' + '\'' + continue_req + '\'' ' is not a valid response.\n', 'red'))
                 valid_req = False
 
 if __name__ == "__main__":
