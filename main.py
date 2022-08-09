@@ -1,6 +1,6 @@
 from datetime import datetime
 from termcolor import colored
-from PyInquirer import style_from_dict, Token, prompt
+from PyInquirer import style_from_dict, Token, prompt, Separator
 from matplotlib import pyplot as plt, ticker
 from pyfiglet import Figlet
 import requests
@@ -13,7 +13,7 @@ colorama.init()
 
 global style 
 style = style_from_dict({
-    Token.Separator: '#00FFFF',
+    Token.Separator: '#00FFFF bold',
     Token.QuestionMark: '',
     Token.Selected: '#00FFFF',
     Token.Pointer: '#00FFFF bold',
@@ -89,7 +89,7 @@ def API_fetch(stat, loc, dates):
     params = {
             'after': min(dates),
             'before': max(dates),
-            'stat': stat.replace(" ", "_").lower(),
+            'stat': stat,
             'loc': loc,
         }
     
@@ -101,14 +101,13 @@ def API_fetch(stat, loc, dates):
             print("Paramaters input: ", params)
     else:
         data = response.json()
-        wanted_stat = stat.replace(" ", "_").lower()
 
         print(colored("\nGenerating graph...", 'cyan'))
         printProgressBar(0, l, prefix='Progress:', suffix='Complete', length=50)
         
         for i, item in enumerate(data['data']):
             if item['date'] in dates:
-                wanted_val = int(item[wanted_stat])
+                wanted_val = int(item[stat])
                 vals.append(wanted_val)
                 
             printProgressBar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
@@ -143,7 +142,7 @@ def get_end_date():
 
         return validate_date(end, 'end')
 
-def get_loc(province_codes):
+def get_loc():
     questions = [
         {
             'type': 'list',
@@ -151,54 +150,70 @@ def get_loc(province_codes):
             'message': 'Please select a province:',
             'name': 'province',
             'choices': [
+                Separator('Northern Canada'),
                 {
-                    'name': 'Alberta',
+                    'name': '   Yukon',
+                    'value': 'YT'
                 },
                 {
-                    'name': 'British Columbia',
+                    'name': '   Northwest Territories',
+                    'value': 'NT'
                 },
                 {
-                    'name': 'Manitoba',
+                    'name': '   Nunavut',
+                    'value': 'NU'
+                },
+                Separator('Western Canada'),
+                {
+                    'name': '   British Columbia',
+                    'value': 'BC'
                 },
                 {
-                    'name': 'New Brunswick',
+                    'name': '   Alberta',
+                    'value': 'AB'
                 },
                 {
-                    'name': 'Newfoundland and Labrador',
+                    'name': '   Saskatchewan',
+                    'value': 'SK'
                 },
                 {
-                    'name': 'Northwest Territories',
+                    'name': '   Manitoba',
+                    'value': 'MB'
+                },
+                Separator('Eastern Canada'),
+                {
+                    'name': '   Ontario',
+                    'value': 'ON'
                 },
                 {
-                    'name': 'Nova Scotia',
+                    'name': '   Quebec',
+                    'value': 'QC'
                 },
                 {
-                    'name': 'Nunavut',
+                    'name': '   New Brunswick',
+                    'value': 'NB'
                 },
                 {
-                    'name': 'Ontario',
+                    'name': '   Nova Scotia',
+                    'value': 'NS'
                 },
                 {
-                    'name': 'Prince Edward Island',
+                    'name': '   Prince Edward Island',
+                    'value': 'PE'
                 },
                 {
-                    'name': 'Quebec',
-                },
-                {
-                    'name': 'Saskatchewan',
-                },
-                {
-                    'name': 'Yukon',
-                },
+                    'name': '   Newfoundland and Labrador',
+                    'value': 'NL'
+                }
             ],
         }
     ]
     try:
         answers = prompt(questions, style=style)
-        return province_codes[answers['province']]
+        return answers['province']
     except IndexError:
         print(colored('Error: you must select at least one province.\n', 'red'))
-        return get_loc(province_codes)
+        return get_loc()
 
 def get_stat():
     questions = [
@@ -208,41 +223,71 @@ def get_stat():
             'message': 'Please select a statistic:',
             'name': 'statistic',
             'choices': [
+                Separator('Cases'),
                 {
-                    'name': 'Cases',
+                    'name': '   Cases',
+                    'value': 'cases'
                 },
                 {
-                    'name': 'Cases Daily',
+                    'name': '   Cases Daily',
+                    'value': 'cases_daily'
+                },
+                Separator('Deaths'),
+                {
+                    'name': '   Deaths',
+                    'value': 'deaths'
                 },
                 {
-                    'name': 'Deaths',
+                    'name': '   Deaths Daily',
+                    'value': 'deaths_daily'
+                },
+                Separator('Hospitalizations'),
+                {
+                    'name': '   Hospitalizations',
+                    'value': 'hospitalizations'
                 },
                 {
-                    'name': 'Deaths Daily',
+                    'name': '   Hospitalizations Daily',
+                    'value': 'hospitalizations_daily'
+                },
+                Separator('ICU'),
+                {
+                    'name': '   ICU',
+                    'value': 'icu'
                 },
                 {
-                    'name': 'Hospitalizations',
+                    'name': '   ICU Daily',
+                    'value': 'icu_daily'
+                },
+                Separator('Tests Completed'),
+                {
+                    'name': '   Tests Completed',
+                    'value': 'tests_completed'
                 },
                 {
-                    'name': 'Hospitalizations Daily',
+                    'name': '   Tests Completed Daily',
+                    'value': 'tests_completed_daily'
+                },
+                Separator('Vaccine Administration'),
+                {
+                    'name': '   Vaccine Administration Dose 1',
+                    'value': 'vaccine_administration_dose_1'
                 },
                 {
-                    'name': 'Tests Completed',
+                    'name': '   Vaccine Administration Dose 2',
+                    'value': 'vaccine_administration_dose_2'
                 },
                 {
-                    'name': 'Tests Completed Daily',
+                    'name': '   Vaccine Administration Dose 3',
+                    'value': 'vaccine_administration_dose_3'
                 },
                 {
-                    'name': 'Vaccine Administration Dose 1',
+                    'name': '   Vaccine Administration Total Doses',
+                    'value': 'vaccine_administration_total_doses'
                 },
                 {
-                    'name': 'Vaccine Administration Dose 2',
-                },
-                {
-                    'name': 'Vaccine Administration Dose 3',
-                },
-                {
-                    'name': 'Vaccine Administration Total Doses',
+                    'name': '   Vaccine Administration Total Doses Daily',
+                    'value': 'vaccine_administration_total_doses_daily'
                 }
             ],
         }
@@ -257,23 +302,23 @@ def get_stat():
 
 def main():
     province_codes = {
-        "Alberta": "AB",
-        "British Columbia": "BC",
-        "Manitoba": "MB",
-        "New Brunswick": "NB",
-        "Newfoundland and Labrador": "NL",
-        "Nova Scotia": "NS",
-        "Ontario": "ON",
-        "Prince Edward Island": "PE",
-        "Quebec": "QC",
-        "Saskatchewan": "SK",
-        "Northwest Territories": "NT",
-        "Nunavut": "NU",
-        "Yukon": "YT"
+        'YT': 'Yukon',
+        'NT': 'Northwest Territories',
+        'NU': 'Nunavut',
+        'BC': 'British Columbia',
+        'AB': 'Alberta',
+        'SK': 'Saskatchewan',
+        'MB': 'Manitoba',
+        'ON': 'Ontario',
+        'QC': 'Quebec',
+        'NB': 'New Brunswick',
+        'NS': 'Nova Scotia',
+        'PE': 'Prince Edward Island',
+        'NL': 'Newfoundland and Labrador'
     }
 
-    loc, stat = get_loc(province_codes), get_stat()
-
+    loc, stat = get_loc(), get_stat()
+    print(stat)
     while True:
         start, end = get_start_date(), get_end_date()
         earliest_date = '2020-01-01'
@@ -303,17 +348,17 @@ def main():
 
         dates = get_date_list(start, end)
         vals = API_fetch(stat, loc, dates)
-        key = [k for k, v in province_codes.items() if v == loc][0]
-        title = stat.replace("_", " ")
+        key = [v for k, v in province_codes.items() if k == loc][0]
+        title = stat.replace("_", " ").title()
         generate_graph(title, dates, vals, key)
 
         valid_req = False
-
         while not valid_req:
             continue_req = input("\nWould you like to continue with a new query (Y/N): ") 
 
             if continue_req in ['y', 'Y']:
                 valid_req = True
+                main()
             elif continue_req in ['n', 'N']:
                 cls()
                 print("\nThank you for using the")
@@ -322,7 +367,7 @@ def main():
                 print("Developed by @bhavanvirs on GitHub\n")
                 exit(1)
             else:
-                print(colored('Error: ' + '\'' + continue_req + '\'' ' is not a valid response.\n', 'red'))
+                print(colored('Error: ' + '\'' + continue_req + '\'' ' is not a valid response.', 'red'))
                 valid_req = False
 
 if __name__ == "__main__":
