@@ -4,22 +4,23 @@ from PyInquirer import style_from_dict, Token, prompt, Separator
 from matplotlib import pyplot as plt, ticker
 from pyfiglet import Figlet
 import requests
-import re
 import pandas as pd
-import os
 import colorama
+import re
+import os
 
 colorama.init()
 
-global colour
-colour = '#00FFFF bold'
+global bolded_colour, colour
+bolded_colour = '#FF00FF bold'
+colour = 'magenta'
 
 global style 
 style = style_from_dict({
-    Token.Separator: colour,
+    Token.Separator: bolded_colour,
     Token.QuestionMark: '',
-    Token.Selected: colour,
-    Token.Pointer: colour,
+    Token.Selected: bolded_colour,
+    Token.Pointer: bolded_colour,
     Token.Instruction: '',
     Token.Answer: '',
     Token.Question: '',
@@ -80,25 +81,29 @@ def generate_graph(stat, dates, vals, loc):
     stat = [v for k, v in statistic_codes.items() if k == stat][0]
     
     ax = plt.axes()
-    ax.grid(True)
+    ax.grid(True, linestyle=':')
 
-    plt.title(stat + " in " +  loc + " over " + str(len(dates)) + " days from " + dates[0] + " to " + dates[len(dates) - 1])
+    plt.title(stat + ' in ' +  loc + ' from ' + dates[0] + ' to ' + dates[len(dates) - 1])
     plt.ylabel(stat)
-    plt.xlabel('Dates')
+    plt.xlabel('Date')
 
     plt.gca().yaxis.set_tick_params(labelsize='medium')
     plt.gca().xaxis.set_tick_params(rotation=45, labelsize='medium')
 
     locator = ticker.MaxNLocator(60)
     ax.xaxis.set_major_locator(locator)
+    ax.plot(x, y, color='black', label='original: ' + str(len(dates)) +  ' days')
 
-    ax.plot(x, y, marker='.')
+    df = pd.DataFrame({'col1': x, 'col2': y})
+    window = 7
+    plt.plot(df['col2'].rolling(window).mean(), color='blue', label='rolling average: ' + str(window) + ' days')
+    plt.fill_between(x, df['col2'].rolling(window).mean(), color='blue', alpha=0.1)
     
     x_min, y_min = find_local_min(x, y)
-    plt.plot(x_min, y_min, "gD", label='local min: ' + f'{y_min:,}' + ' on ' + str(x_min))
+    plt.plot(x_min, y_min, 'go', label='local min: ' + f'{y_min:,}' + ' on ' + str(x_min))
     x_max, y_max = find_local_max(x, y)
-    plt.plot(x_max, y_max, "rD", label='local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
-    
+    plt.plot(x_max, y_max, 'ro', label='local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
+
     plt.tight_layout()
     plt.legend()
 
@@ -144,7 +149,7 @@ def fetch_api_data(stat, loc, dates):
     else:
         data = response.json()
 
-        print(colored("\nGenerating graph...", 'cyan'))
+        print(colored("\nGenerating graph...", colour))
         print_progress_bar(0, l, prefix='Progress:', suffix='Complete', length=50)
         
         for i, item in enumerate(data['data']):
@@ -388,7 +393,7 @@ def main():
                 cls()
                 print("\nThank you for using")
                 f = Figlet(font='slant')
-                print(colored(f.renderText('COVID Visualizer'), 'cyan'), end = "")
+                print(colored(f.renderText('COVID Visualizer'), colour), end = "")
                 print("Developed by @bhavanvirs on GitHub\n")
                 exit(1)
             else:
