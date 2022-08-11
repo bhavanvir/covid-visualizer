@@ -1,5 +1,5 @@
 from datetime import datetime
-from termcolor import colored, cprint
+from termcolor import colored
 from PyInquirer import style_from_dict, Token, prompt, Separator
 from matplotlib import pyplot as plt, ticker
 from pyfiglet import Figlet
@@ -11,12 +11,15 @@ import colorama
 
 colorama.init()
 
+global colour
+colour = '#00FFFF bold'
+
 global style 
 style = style_from_dict({
-    Token.Separator: '#00FFFF bold',
+    Token.Separator: colour,
     Token.QuestionMark: '',
-    Token.Selected: '#00FFFF',
-    Token.Pointer: '#00FFFF bold',
+    Token.Selected: colour,
+    Token.Pointer: colour,
     Token.Instruction: '',
     Token.Answer: '',
     Token.Question: '',
