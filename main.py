@@ -100,9 +100,9 @@ def generate_graph(stat, dates, vals, loc):
     plt.fill_between(x, df['col2'].rolling(window).mean(), color='blue', alpha=0.1)
     
     x_min, y_min = find_local_min(x, y)
-    plt.plot(x_min, y_min, 'go', label='local min: ' + f'{y_min:,}' + ' on ' + str(x_min))
+    plt.plot(x_min, y_min,'rv', label='local min: ' + f'{y_min:,}' + ' on ' + str(x_min))
     x_max, y_max = find_local_max(x, y)
-    plt.plot(x_max, y_max, 'ro', label='local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
+    plt.plot(x_max, y_max,'r^', label='local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
 
     plt.tight_layout()
     plt.legend()
