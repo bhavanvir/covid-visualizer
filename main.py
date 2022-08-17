@@ -413,15 +413,15 @@ def main():
                 'type': 'confirm',
                 'qmark': '•',
                 'message': 'Would you like to continue with a new query?',
-                'name': 'continue_req',
+                'name': 'continue',
             }
         ]
         answers = prompt(questions, style=style)
 
-        if answers['continue_req']:
+        if answers['continue']:
             cls()
             main()
-        elif not answers['continue_req']:
+        elif not answers['continue']:
             cls()
             print("\nThank you for using")
             f = Figlet(font='slant')
