@@ -110,6 +110,7 @@ def generate_graph(stat, dates, vals, loc):
     mng = plt.get_current_fig_manager()
     mng.window.state('zoomed')
     
+    print(colored('Graph generated.\n', colour))
     plt.show()
 
 def get_date_list(start, end):
@@ -174,167 +175,188 @@ def validate_date(date, desc):
             return get_end_date()
 
 def get_start_date():
-    while(True):
-        start = input("• Enter a valid start date or enter 'today' for the current date (YYYY-MM-DD): ")
-        if start.lower() == 'today': 
-            start = datetime.today().strftime("%Y-%m-%d")
+    while True:
+        questions = [
+            {
+                'type': 'input',
+                'qmark': '•',
+                'name': 'start_date',
+                'message': 'Please Enter a valid start date or enter \'today\' for the current date (YYYY-MM-DD):',
+            }
+        ]
+        answers = prompt(questions, style=style)
+        if answers['start_date'].lower() == 'today': 
+            answers['start_date'] = datetime.today().strftime("%Y-%m-%d")
 
-        return validate_date(start, 'start')
+        return validate_date(answers['start_date'], 'start')
 
 def get_end_date():
-    while(True):
-        end = input("• Enter a valid end date or enter 'today' for the current date (YYYY-MM-DD): ")
-        if end.lower() == 'today':
-            end = datetime.today().strftime("%Y-%m-%d")
+    while True:
+        questions = [
+            {
+                'type': 'input',
+                'qmark': '•',
+                'name': 'end_date',
+                'message': 'Please Enter a valid end date or enter \'today\' for the current date (YYYY-MM-DD):',
+            }
+        ]
+        answers = prompt(questions, style=style)
+        if answers['end_date'].lower() == 'today':
+            answers['end_date'] = datetime.today().strftime("%Y-%m-%d")
 
-        return validate_date(end, 'end')
+        return validate_date(answers['end_date'], 'end')
 
 def get_loc():
     questions = [
         {
-            'type': 'list',
+            'type': 'checkbox',
             'qmark': '•',
             'message': 'Please select a province:',
             'name': 'province',
             'choices': [
                 Separator('Northern Canada'),
                 {
-                    'name': '   Yukon',
+                    'name': 'Yukon',
                     'value': 'YT'
                 },
                 {
-                    'name': '   Northwest Territories',
+                    'name': 'Northwest Territories',
                     'value': 'NT'
                 },
                 {
-                    'name': '   Nunavut',
+                    'name': 'Nunavut',
                     'value': 'NU'
-                },
-                Separator('Western Canada'),
-                {
-                    'name': '   British Columbia',
-                    'value': 'BC'
-                },
-                {
-                    'name': '   Alberta',
-                    'value': 'AB'
-                },
-                {
-                    'name': '   Saskatchewan',
-                    'value': 'SK'
-                },
-                {
-                    'name': '   Manitoba',
-                    'value': 'MB'
                 },
                 Separator('Eastern Canada'),
                 {
-                    'name': '   Ontario',
+                    'name': 'Ontario',
                     'value': 'ON'
                 },
                 {
-                    'name': '   Quebec',
+                    'name': 'Quebec',
                     'value': 'QC'
                 },
                 {
-                    'name': '   New Brunswick',
+                    'name': 'New Brunswick',
                     'value': 'NB'
                 },
                 {
-                    'name': '   Nova Scotia',
+                    'name': 'Nova Scotia',
                     'value': 'NS'
                 },
                 {
-                    'name': '   Prince Edward Island',
+                    'name': 'Prince Edward Island',
                     'value': 'PE'
                 },
                 {
-                    'name': '   Newfoundland and Labrador',
+                    'name': 'Newfoundland and Labrador',
                     'value': 'NL'
+                },
+                Separator('Western Canada'),
+                {
+                    'name': 'British Columbia',
+                    'value': 'BC'
+                },
+                {
+                    'name': 'Alberta',
+                    'value': 'AB'
+                },
+                {
+                    'name': 'Saskatchewan',
+                    'value': 'SK'
+                },
+                {
+                    'name': 'Manitoba',
+                    'value': 'MB'
                 }
             ],
         }
     ]
     try:
         answers = prompt(questions, style=style)
-        return answers['province']
-    except IndexError:
+        print(answers['province'])
+        assert len(answers['province']) == 1
+        return answers['province'][0]
+    except AssertionError:
         cls()
-        print(colored('Error: you must select at least one province.\n', 'red', attrs=['bold']))
+        if len(answers['province']) == 0:
+            print(colored('Error: you must select at least one province.\n', 'red', attrs=['bold']))
+        else:
+            print(colored('Error: you must select only one province.\n', 'red', attrs=['bold']))
         return get_loc()
 
 def get_stat():
     questions = [
         {
-            'type': 'list',
+            'type': 'checkbox',
             'qmark': '•',
             'message': 'Please select a statistic:',
             'name': 'statistic',
             'choices': [
                 Separator('Cases'),
                 {
-                    'name': '   Cases',
+                    'name': 'Cases',
                     'value': 'cases'
                 },
                 {
-                    'name': '   Cases Daily',
+                    'name': 'Cases Daily',
                     'value': 'cases_daily'
                 },
                 Separator('Deaths'),
                 {
-                    'name': '   Deaths',
+                    'name': 'Deaths',
                     'value': 'deaths'
                 },
                 {
-                    'name': '   Deaths Daily',
+                    'name': 'Deaths Daily',
                     'value': 'deaths_daily'
                 },
                 Separator('Hospitalizations'),
                 {
-                    'name': '   Hospitalizations',
+                    'name': 'Hospitalizations',
                     'value': 'hospitalizations'
                 },
                 {
-                    'name': '   Hospitalizations Daily',
+                    'name': 'Hospitalizations Daily',
                     'value': 'hospitalizations_daily'
                 },
                 Separator('ICU'),
                 {
-                    'name': '   ICU',
+                    'name': 'ICU',
                     'value': 'icu'
                 },
                 {
-                    'name': '   ICU Daily',
+                    'name': 'ICU Daily',
                     'value': 'icu_daily'
                 },
                 Separator('Tests Completed'),
                 {
-                    'name': '   Tests Completed',
+                    'name': 'Tests Completed',
                     'value': 'tests_completed'
                 },
                 {
-                    'name': '   Tests Completed Daily',
+                    'name': 'Tests Completed Daily',
                     'value': 'tests_completed_daily'
                 },
                 Separator('Vaccine Administration'),
                 {
-                    'name': '   Vaccine Administration Dose 1',
+                    'name': 'Vaccine Administration Dose 1',
                     'value': 'vaccine_administration_dose_1'
                 },
                 {
-                    'name': '   Vaccine Administration Dose 2',
+                    'name': 'Vaccine Administration Dose 2',
                     'value': 'vaccine_administration_dose_2'
                 },
                 {
-                    'name': '   Vaccine Administration Dose 3',
+                    'name': 'Vaccine Administration Dose 3',
                     'value': 'vaccine_administration_dose_3'
                 },
                 {
-                    'name': '   Vaccine Administration Total Doses',
+                    'name': 'Vaccine Administration Total Doses',
                     'value': 'vaccine_administration_total_doses'
                 },
                 {
-                    'name': '   Vaccine Administration Total Doses Daily',
+                    'name': 'Vaccine Administration Total Doses Daily',
                     'value': 'vaccine_administration_total_doses_daily'
                 }
             ],
@@ -342,10 +364,14 @@ def get_stat():
     ]
     try:
         answers = prompt(questions, style=style)
-        return answers['statistic']
-    except IndexError:
+        assert len(answers['statistic']) == 1
+        return answers['statistic'][0]
+    except AssertionError:
         cls()
-        print(colored('Error: you must select at least one statistic.\n', 'red', attrs=['bold']))
+        if len(answers['statistic']) == 0:
+            print(colored('Error: you must select at least one statistic.\n', 'red', attrs=['bold']))
+        else:
+            print(colored('Error: you must select only one statistic.\n', 'red', attrs=['bold']))
         return get_stat()
 
 def main():
@@ -382,23 +408,26 @@ def main():
         vals = fetch_api_data(stat, loc, dates)
         generate_graph(stat, dates, vals, loc)
 
-        valid_req = False
-        while not valid_req:
-            continue_req = input("\nWould you like to continue with a new query (Y/N): ") 
+        questions = [
+            {
+                'type': 'confirm',
+                'qmark': '•',
+                'message': 'Would you like to continue with a new query?',
+                'name': 'continue_req',
+            }
+        ]
+        answers = prompt(questions, style=style)
 
-            if continue_req in ['y', 'Y']:
-                valid_req = True
-                main()
-            elif continue_req in ['n', 'N']:
-                cls()
-                print("\nThank you for using")
-                f = Figlet(font='slant')
-                print(colored(f.renderText('COVID Visualizer'), colour), end = "")
-                print("Developed by @bhavanvirs on GitHub\n")
-                exit(1)
-            else:
-                print(colored('Error: ' + '\'' + continue_req + '\'' ' is not a valid response.', 'red', attrs=['bold']))
-                valid_req = False
+        if answers['continue_req']:
+            cls()
+            main()
+        elif not answers['continue_req']:
+            cls()
+            print("\nThank you for using")
+            f = Figlet(font='slant')
+            print(colored(f.renderText('COVID Visualizer'), colour), end = "")
+            print("Developed by @bhavanvirs on GitHub\n")
+            exit(1)
 
 if __name__ == "__main__":
     main()
