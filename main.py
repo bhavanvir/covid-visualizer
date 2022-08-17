@@ -12,8 +12,8 @@ import os
 colorama.init()
 
 global bolded_colour, colour
-bolded_colour = '#FF00FF bold'
-colour = 'magenta'
+bolded_colour = '#00FFFF bold'
+colour = 'cyan'
 
 global style 
 style = style_from_dict({
@@ -22,7 +22,7 @@ style = style_from_dict({
     Token.Selected: bolded_colour,
     Token.Pointer: bolded_colour,
     Token.Instruction: '',
-    Token.Answer: '',
+    Token.Answer: bolded_colour,
     Token.Question: '',
 })
 
@@ -110,7 +110,7 @@ def generate_graph(stat, dates, vals, loc):
     mng = plt.get_current_fig_manager()
     mng.window.state('zoomed')
     
-    print(colored('Graph generated.\n', colour))
+    print(colored('Success: graph generated.\n', 'green', attrs=['bold']))
     plt.show()
 
 def get_date_list(start, end):
@@ -133,6 +133,9 @@ def fetch_api_data(stat, loc, dates):
     url = 'https://api.opencovid.ca/summary'
     vals, l = [], len(dates)
 
+    print("\nGenerating graph...")
+    print_progress_bar(0, l, prefix='Progress:', suffix='Complete', length=50)
+
     params = {
             'after': min(dates),
             'before': max(dates),
@@ -149,9 +152,6 @@ def fetch_api_data(stat, loc, dates):
         exit(1)
     else:
         data = response.json()
-
-        print(colored("\nGenerating graph...", colour))
-        print_progress_bar(0, l, prefix='Progress:', suffix='Complete', length=50)
         
         for i, item in enumerate(data['data']):
             if item['date'] in dates:
@@ -274,7 +274,6 @@ def get_loc():
     ]
     try:
         answers = prompt(questions, style=style)
-        print(answers['province'])
         assert len(answers['province']) == 1
         return answers['province'][0]
     except AssertionError:
