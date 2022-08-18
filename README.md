@@ -12,6 +12,7 @@ pip install termcolor
 pip install PyInquirer
 pip install matplotlib
 pip install pyfiglet
+pip install tqdm
 pip install requests
 pip install pandas
 pip install colorama
