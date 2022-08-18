@@ -1,10 +1,9 @@
 from datetime import datetime
-from logging import PercentStyle
 from termcolor import colored
 from PyInquirer import style_from_dict, Token, prompt, Separator
 from matplotlib import pyplot as plt, ticker
 from pyfiglet import Figlet
-from tqdm import tqdm, trange
+from tqdm import tqdm
 import requests
 import pandas as pd
 import colorama
