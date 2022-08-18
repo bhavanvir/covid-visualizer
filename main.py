@@ -1,11 +1,14 @@
 from datetime import datetime
+from logging import PercentStyle
 from termcolor import colored
 from PyInquirer import style_from_dict, Token, prompt, Separator
 from matplotlib import pyplot as plt, ticker
 from pyfiglet import Figlet
+from tqdm import tqdm, trange
 import requests
 import pandas as pd
 import colorama
+import time
 import re
 import os
 
@@ -110,7 +113,6 @@ def generate_graph(stat, dates, vals, loc):
     mng = plt.get_current_fig_manager()
     mng.window.state('zoomed')
     
-    print(colored('Success: graph generated.\n', 'green', attrs=['bold']))
     plt.show()
 
 def get_date_list(start, end):
@@ -121,20 +123,9 @@ def get_date_list(start, end):
     elif start_date < end_date: 
         return pd.date_range(start, end).strftime("%Y-%m-%d").tolist()
 
-def print_progress_bar(iteration, total, prefix='', suffix='', decimals=1, length=100, fill='█', printEnd="\r"):
-    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print(f'\r{prefix} |{bar}| {percent}% {suffix}', end=printEnd)
-    if iteration == total: 
-        print()
-
 def fetch_api_data(stat, loc, dates):
     url = 'https://api.opencovid.ca/summary'
     vals, l = [], len(dates)
-
-    print("\nGenerating graph...")
-    print_progress_bar(0, l, prefix='Progress:', suffix='Complete', length=50)
 
     params = {
             'after': min(dates),
@@ -152,13 +143,15 @@ def fetch_api_data(stat, loc, dates):
         exit(1)
     else:
         data = response.json()
-        
-        for i, item in enumerate(data['data']):
+
+        print("\nGenerating graph...")
+        for i, item in enumerate(tqdm(data['data'], total=l, desc='Progress', bar_format='{desc}: {percentage:.1f}% Complete |{bar:75}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]')):
             if item['date'] in dates:
                 wanted_val = int(item[stat])
                 vals.append(wanted_val)
-                
-            print_progress_bar(i + 1, l, prefix='Progress:', suffix='Complete', length=50)
+            if i % 5 == 0:
+                time.sleep(0.01)
+        print(colored('Success: graph generated, now displaying...\n', 'green', attrs=['bold']))
 
     return vals
 
@@ -181,7 +174,7 @@ def get_start_date():
                 'type': 'input',
                 'qmark': '•',
                 'name': 'start_date',
-                'message': 'Please Enter a valid start date or enter \'today\' for the current date (YYYY-MM-DD):',
+                'message': 'Please enter a valid start date or enter \'today\' for the current date (YYYY-MM-DD):',
             }
         ]
         answers = prompt(questions, style=style)
@@ -197,7 +190,7 @@ def get_end_date():
                 'type': 'input',
                 'qmark': '•',
                 'name': 'end_date',
-                'message': 'Please Enter a valid end date or enter \'today\' for the current date (YYYY-MM-DD):',
+                'message': 'Please enter a valid end date or enter \'today\' for the current date (YYYY-MM-DD):',
             }
         ]
         answers = prompt(questions, style=style)
@@ -279,9 +272,9 @@ def get_loc():
     except AssertionError:
         cls()
         if len(answers['province']) == 0:
-            print(colored('Error: you must select at least one province.\n', 'red', attrs=['bold']))
+            print(colored('Error: ' + '\'' + str(answers['province']) + '\'' + ' is not a valid province.\n', 'red', attrs=['bold']))
         else:
-            print(colored('Error: you must select only one province.\n', 'red', attrs=['bold']))
+            print(colored('Error: ' + '\'' + str(answers['province']) + '\'' + ' too many provinces, only one must be selected.\n', 'red', attrs=['bold']))
         return get_loc()
 
 def get_stat():
@@ -368,9 +361,9 @@ def get_stat():
     except AssertionError:
         cls()
         if len(answers['statistic']) == 0:
-            print(colored('Error: you must select at least one statistic.\n', 'red', attrs=['bold']))
+            print(colored('Error: ' + '\'' + str(answers['statistic']) + '\'' + ' is not a valid statistic.\n', 'red', attrs=['bold']))
         else:
-            print(colored('Error: you must select only one statistic.\n', 'red', attrs=['bold']))
+            print(colored('Error: ' + '\'' + str(answers['statistic']) + '\'' + ' too many statistics, only one must be selected.\n', 'red', attrs=['bold']))
         return get_stat()
 
 def main():
