@@ -366,6 +366,33 @@ def get_stat():
             print(colored('Error: ' + '\'' + str(answers['statistic']) + '\'' + ' too many statistics, only one must be selected.\n', 'red', attrs=['bold']))
         return get_stat()
 
+def new_query():
+    questions = [
+            {
+                'type': 'input',
+                'qmark': '•',
+                'message': 'Would you like to continue with a new query? (Y/N):',
+                'name': 'continue',
+            }
+        ]
+
+    answers = prompt(questions, style=style)
+
+    if answers['continue'] in ['Y', 'y']:
+        cls()
+        main()
+    elif answers['continue'] in ['N', 'n']:
+        cls()
+        print("\nThank you for using")
+        f = Figlet(font='slant')
+        print(colored(f.renderText('COVID Visualizer'), colour), end = "")
+        print("Developed by @bhavanvirs on GitHub\n")
+        exit(1)
+    else:
+        cls()
+        print(colored('Error: ' + '\'' + str(answers['continue']) + '\'' + ' is not in the correct format (Y/N).\n', 'red', attrs=['bold']))
+        new_query()
+
 def main():
     loc, stat = get_loc(), get_stat()
 
@@ -400,26 +427,7 @@ def main():
         vals = fetch_api_data(stat, loc, dates)
         generate_graph(stat, dates, vals, loc)
 
-        questions = [
-            {
-                'type': 'confirm',
-                'qmark': '•',
-                'message': 'Would you like to continue with a new query?',
-                'name': 'continue',
-            }
-        ]
-        answers = prompt(questions, style=style)
-
-        if answers['continue']:
-            cls()
-            main()
-        elif not answers['continue']:
-            cls()
-            print("\nThank you for using")
-            f = Figlet(font='slant')
-            print(colored(f.renderText('COVID Visualizer'), colour), end = "")
-            print("Developed by @bhavanvirs on GitHub\n")
-            exit(1)
+        new_query()
 
 if __name__ == "__main__":
     main()
