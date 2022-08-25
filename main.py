@@ -14,8 +14,8 @@ import os
 colorama.init()
 
 global bolded_colour, colour
-bolded_colour = '#00FFFF bold'
-colour = 'cyan'
+bolded_colour = '#FFFF00 bold'
+colour = 'yellow'
 
 global style 
 style = style_from_dict({
