@@ -1,17 +1,33 @@
-from datetime import datetime
-from termcolor import colored
-from PyInquirer import style_from_dict, Token, prompt, Separator
-from matplotlib import pyplot as plt, ticker
-from pyfiglet import Figlet
-from tqdm import tqdm
-import requests
-import pandas as pd
+# Output Formatting
 import colorama
-import time
-import re
-import os
-
 colorama.init()
+from termcolor import colored
+from pyfiglet import Figlet
+
+# Input Formatting 
+from PyInquirer import style_from_dict, Token, prompt, Separator
+
+# Time Tracking
+import time
+from datetime import datetime
+
+# Progress Bar
+from tqdm import tqdm
+
+# API Data
+import requests
+
+# Data Manipulation
+import pandas as pd
+
+# Data Plotting
+from matplotlib import pyplot as plt, ticker
+
+# String Validation
+import re
+
+# Operating System
+import os
 
 global bolded_colour, colour
 bolded_colour = '#FFFF00 bold'
@@ -63,9 +79,6 @@ statistic_codes = {
     'vaccine_administration_total_doses': 'Vaccine Administration Total Doses',
     'vaccine_administration_total_doses_daily': 'Vaccine Administration Total Doses Daily',
 }
-
-def cls():
-    os.system('cls' if os.name == 'nt' else 'clear')
 
 def find_local_min(x, y):
     for x_i, y_i in zip(x, y):
@@ -136,7 +149,6 @@ def fetch_api_data(stat, loc, dates):
     response = requests.get(url, params=params)
     if response.status_code != 200:
         output_string = re.search(r'(?<=\:).*[^}]', response.text)
-        cls()
         print(colored('Error: paramaters input ' + '\'' + str(params) + '\'', 'red', attrs=['bold']))
         print(colored('Error: response with code ' + '\'' + str(response.status_code) + '\'' + ' corresponding to ' + '\'' + output_string.group().strip("\"") + '.\'', 'red', attrs=['bold']))
         exit(1)
@@ -269,7 +281,6 @@ def get_loc():
         assert len(answers['province']) == 1
         return answers['province'][0]
     except AssertionError:
-        cls()
         if len(answers['province']) == 0:
             print(colored('Error: ' + '\'' + str(answers['province']) + '\'' + ' is not a valid province.\n', 'red', attrs=['bold']))
         else:
@@ -358,7 +369,6 @@ def get_stat():
         assert len(answers['statistic']) == 1
         return answers['statistic'][0]
     except AssertionError:
-        cls()
         if len(answers['statistic']) == 0:
             print(colored('Error: ' + '\'' + str(answers['statistic']) + '\'' + ' is not a valid statistic.\n', 'red', attrs=['bold']))
         else:
@@ -378,17 +388,14 @@ def new_query():
     answers = prompt(questions, style=style)
 
     if answers['continue'] in ['Y', 'y']:
-        cls()
         main()
     elif answers['continue'] in ['N', 'n']:
-        cls()
         print("\nThank you for using")
         f = Figlet(font='slant')
         print(colored(f.renderText('COVID Visualizer'), colour), end = "")
         print("Developed by @bhavanvirs on GitHub\n")
         exit(1)
     else:
-        cls()
         print(colored('Error: ' + '\'' + str(answers['continue']) + '\'' + ' is not in the correct format (Y/N).\n', 'red', attrs=['bold']))
         new_query()
 
