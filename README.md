@@ -8,14 +8,14 @@ Several dependencies are required to run the COVID-Visualizer that are not inclu
 
 Using the package manager [pip](https://pip.pypa.io/en/stable/) to install external modules:
 ```bash
+pip install colorama
 pip install termcolor
-pip install PyInquirer
-pip install matplotlib
 pip install pyfiglet
+pip install PyInquirer
 pip install tqdm
 pip install requests
 pip install pandas
-pip install colorama
+pip install matplotlib
 ```
 Once the external modules have been installed, the source code for COVID-Visualizer can then be obtained using the `git clone` command with the public repository's URL as the target, to make a clone or copy of the repository in a new directory, at another location.
 
