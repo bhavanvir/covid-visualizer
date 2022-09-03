@@ -26,9 +26,6 @@ from matplotlib import pyplot as plt, ticker
 # String Validation
 import re
 
-# Operating System
-import os
-
 global bolded_colour, colour
 bolded_colour = '#FFFF00 bold'
 colour = 'yellow'
@@ -40,7 +37,7 @@ style = style_from_dict({
     Token.Selected: bolded_colour,
     Token.Pointer: bolded_colour,
     Token.Instruction: '',
-    Token.Answer: bolded_colour,
+    Token.Answer: '',
     Token.Question: '',
 })
 
@@ -80,26 +77,50 @@ statistic_codes = {
     'vaccine_administration_total_doses_daily': 'Vaccine Administration Total Doses Daily',
 }
 
-def find_local_min(x, y):
+def find_minimum(x, y):
     for x_i, y_i in zip(x, y):
         if y_i == min(y):
             return x_i, y_i
 
-def find_local_max(x, y):
+def find_maximum(x, y):
     for x_i, y_i in zip(x, y):
         if y_i == max(y):
             return x_i, y_i
 
-def generate_graph(stat, dates, vals, loc):
-    x, y = dates, vals
-    loc = [v for k, v in province_codes.items() if k == loc][0]
-    stat = [v for k, v in statistic_codes.items() if k == stat][0]
+def get_location_name(location):
+    location = [value for key, value in province_codes.items() if key == location][0]
+
+    return location 
+
+def get_statistic_name(statistic):
+    statistic = [value for key, value in statistic_codes.items() if key == statistic][0]
+
+    return statistic
+
+def generate_rolling_average(x, y, window):
+    data_frame = pd.DataFrame({'col1': x, 'col2': y})
+    plt.plot(data_frame['col2'].rolling(window).mean(), color='blue', label='Rolling average: ' + str(window) + ' days')
+    plt.fill_between(x, data_frame['col2'].rolling(window).mean(), color='blue', alpha=0.1)
+
+def generate_minimum_maximum(x, y):
+    x_minimum, y_minimum = find_minimum(x, y)
+    plt.plot(x_minimum, y_minimum,'rv', label='Minimum: ' + f'{y_minimum:,}' + ' on ' + str(x_minimum))
+    x_maximum, y_maximum = find_maximum(x, y)
+    plt.plot(x_maximum, y_maximum,'r^', label='Maximum: ' + f'{y_maximum:,}' + ' on ' + str(x_maximum))
+
+def zoom_plot_window():
+    manager = plt.get_current_fig_manager()
+    manager.window.state('zoomed')
+
+def generate_main_graph(statistic, dates, values, location):
+    x, y = dates, values
+    location_name, statistic_name = get_location_name(location), get_statistic_name(statistic)
     
     ax = plt.axes()
     ax.grid(True, linestyle=':')
 
-    plt.title(stat + ' in ' +  loc + ' from ' + dates[0] + ' to ' + dates[len(dates) - 1])
-    plt.ylabel(stat)
+    plt.title(statistic_name + ' in ' +  location_name + ' from ' + dates[0] + ' to ' + dates[len(dates) - 1])
+    plt.ylabel(statistic_name)
     plt.xlabel('Date')
 
     plt.gca().yaxis.set_tick_params(labelsize='medium')
@@ -107,23 +128,16 @@ def generate_graph(stat, dates, vals, loc):
 
     locator = ticker.MaxNLocator(60)
     ax.xaxis.set_major_locator(locator)
-    ax.plot(x, y, color='black', label='original: ' + str(len(dates)) +  ' days')
+    ax.plot(x, y, color='black', label='Original: ' + str(len(dates)) +  ' days')
 
-    df = pd.DataFrame({'col1': x, 'col2': y})
-    window = 7
-    plt.plot(df['col2'].rolling(window).mean(), color='blue', label='rolling average: ' + str(window) + ' days')
-    plt.fill_between(x, df['col2'].rolling(window).mean(), color='blue', alpha=0.1)
+    generate_rolling_average(x, y, 7)
     
-    x_min, y_min = find_local_min(x, y)
-    plt.plot(x_min, y_min,'rv', label='local min: ' + f'{y_min:,}' + ' on ' + str(x_min))
-    x_max, y_max = find_local_max(x, y)
-    plt.plot(x_max, y_max,'r^', label='local max: ' + f'{y_max:,}' + ' on ' + str(x_max))
+    generate_minimum_maximum(x, y)
 
     plt.tight_layout()
     plt.legend()
 
-    mng = plt.get_current_fig_manager()
-    mng.window.state('zoomed')
+    zoom_plot_window()
     
     plt.show()
 
@@ -135,45 +149,43 @@ def get_date_list(start, end):
     elif start_date < end_date: 
         return pd.date_range(start, end).strftime("%Y-%m-%d").tolist()
 
-def fetch_api_data(stat, loc, dates):
+def fetch_api_data(statistic, location, dates):
     url = 'https://api.opencovid.ca/summary'
-    vals, l = [], len(dates)
-
-    params = {
+    values, l = [], len(dates)
+    paramaters = {
             'after': min(dates),
             'before': max(dates),
-            'stat': stat,
-            'loc': loc,
+            'stat': statistic,
+            'loc': location,
         }
     
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=paramaters)
     if response.status_code != 200:
         output_string = re.search(r'(?<=\:).*[^}]', response.text)
-        print(colored('Error: paramaters input ' + '\'' + str(params) + '\'', 'red', attrs=['bold']))
+        print(colored('Error: paramaters input ' + '\'' + str(paramaters) + '\'', 'red', attrs=['bold']))
         print(colored('Error: response with code ' + '\'' + str(response.status_code) + '\'' + ' corresponding to ' + '\'' + output_string.group().strip("\"") + '.\'', 'red', attrs=['bold']))
         exit(1)
     else:
         data = response.json()
 
-        print("\nGenerating graph...")
-        for i, item in enumerate(tqdm(data['data'], total=l, desc='Progress', bar_format='{desc}: {percentage:.1f}% Complete |{bar:75}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]')):
+        print(colored("\nSucess: generating graph...", 'green', attrs=['bold']))
+        for index, item in enumerate(tqdm(data['data'], total=l, desc='Progress', bar_format='{desc}: {percentage:.1f}% Complete |{bar:75}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]')):
             if item['date'] in dates:
-                wanted_val = int(item[stat])
-                vals.append(wanted_val)
-            if i % 5 == 0:
+                values.append(int(item[statistic]))
+            if index % 5 == 0:
                 time.sleep(0.01)
         print(colored('Success: graph generated, now displaying...\n', 'green', attrs=['bold']))
 
-    return vals
+    return values
 
-def validate_date(date, desc):
+def validate_date(date, description):
     try:
         if date != datetime.strptime(date, "%Y-%m-%d").strftime("%Y-%m-%d"):
             raise ValueError
         return date
     except ValueError:
         print((colored('Error: ' + '\'' + date + '\'' + ' is not in the correct format (YYYY-MM-DD).\n', 'red', attrs=['bold'])))
-        if desc == 'start':
+        if description == 'start':
             return get_start_date()
         else:
             return get_end_date()
@@ -204,13 +216,14 @@ def get_end_date():
                 'message': 'Please enter a valid end date or enter \'today\' for the current date (YYYY-MM-DD):',
             }
         ]
+
         answers = prompt(questions, style=style)
         if answers['end_date'].lower() == 'today':
             answers['end_date'] = datetime.today().strftime("%Y-%m-%d")
 
         return validate_date(answers['end_date'], 'end')
 
-def get_loc():
+def get_location():
     questions = [
         {
             'type': 'checkbox',
@@ -276,6 +289,7 @@ def get_loc():
             ],
         }
     ]
+
     try:
         answers = prompt(questions, style=style)
         assert len(answers['province']) == 1
@@ -285,9 +299,9 @@ def get_loc():
             print(colored('Error: ' + '\'' + str(answers['province']) + '\'' + ' is not a valid province.\n', 'red', attrs=['bold']))
         else:
             print(colored('Error: ' + '\'' + str(answers['province']) + '\'' + ' too many provinces, only one must be selected.\n', 'red', attrs=['bold']))
-        return get_loc()
+        return get_location()
 
-def get_stat():
+def get_statistic():
     questions = [
         {
             'type': 'checkbox',
@@ -364,6 +378,7 @@ def get_stat():
             ],
         }
     ]
+
     try:
         answers = prompt(questions, style=style)
         assert len(answers['statistic']) == 1
@@ -373,7 +388,7 @@ def get_stat():
             print(colored('Error: ' + '\'' + str(answers['statistic']) + '\'' + ' is not a valid statistic.\n', 'red', attrs=['bold']))
         else:
             print(colored('Error: ' + '\'' + str(answers['statistic']) + '\'' + ' too many statistics, only one must be selected.\n', 'red', attrs=['bold']))
-        return get_stat()
+        return get_statistic()
 
 def new_query():
     questions = [
@@ -386,21 +401,20 @@ def new_query():
         ]
 
     answers = prompt(questions, style=style)
-
     if answers['continue'] in ['Y', 'y']:
         main()
     elif answers['continue'] in ['N', 'n']:
-        print("\nThank you for using")
+        print()
         f = Figlet(font='slant')
         print(colored(f.renderText('COVID Visualizer'), colour), end = "")
-        print("Developed by @bhavanvirs on GitHub\n")
+        print(colored("Developed by @bhavanvirs on GitHub\n", colour, attrs=['bold']))
         exit(1)
     else:
         print(colored('Error: ' + '\'' + str(answers['continue']) + '\'' + ' is not in the correct format (Y/N).\n', 'red', attrs=['bold']))
         new_query()
 
 def main():
-    loc, stat = get_loc(), get_stat()
+    location, statistic = get_location(), get_statistic()
 
     while True:
         start, end = get_start_date(), get_end_date()
@@ -430,8 +444,8 @@ def main():
             continue
 
         dates = get_date_list(start, end)
-        vals = fetch_api_data(stat, loc, dates)
-        generate_graph(stat, dates, vals, loc)
+        values = fetch_api_data(statistic, location, dates)
+        generate_main_graph(statistic, dates, values, location)
 
         new_query()
 
