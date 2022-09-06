@@ -10,7 +10,6 @@ Using the package manager [pip](https://pip.pypa.io/en/stable/) to install exter
 ```bash
 pip install colorama
 pip install termcolor
-pip install pyfiglet
 pip install PyInquirer
 pip install tqdm
 pip install requests
