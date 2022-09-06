@@ -2,7 +2,6 @@
 import colorama
 colorama.init()
 from termcolor import colored
-from pyfiglet import Figlet
 
 # Input Formatting 
 from PyInquirer import style_from_dict, Token, prompt, Separator
@@ -168,7 +167,7 @@ def fetch_api_data(statistic, location, dates):
     else:
         data = response.json()
 
-        print(colored("\nSucess: generating graph...", 'green', attrs=['bold']))
+        print(colored("\nSuccess: generating graph...", 'green', attrs=['bold']))
         for index, item in enumerate(tqdm(data['data'], total=l, desc='Progress', bar_format='{desc}: {percentage:.1f}% Complete |{bar:75}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]')):
             if item['date'] in dates:
                 values.append(int(item[statistic]))
@@ -195,7 +194,7 @@ def get_start_date():
         questions = [
             {
                 'type': 'input',
-                'qmark': '•',
+                'qmark': '●',
                 'name': 'start_date',
                 'message': 'Please enter a valid start date or enter \'today\' for the current date (YYYY-MM-DD):',
             }
@@ -211,7 +210,7 @@ def get_end_date():
         questions = [
             {
                 'type': 'input',
-                'qmark': '•',
+                'qmark': '●',
                 'name': 'end_date',
                 'message': 'Please enter a valid end date or enter \'today\' for the current date (YYYY-MM-DD):',
             }
@@ -227,7 +226,7 @@ def get_location():
     questions = [
         {
             'type': 'checkbox',
-            'qmark': '•',
+            'qmark': '●',
             'message': 'Please select a province:',
             'name': 'province',
             'choices': [
@@ -305,7 +304,7 @@ def get_statistic():
     questions = [
         {
             'type': 'checkbox',
-            'qmark': '•',
+            'qmark': '●',
             'message': 'Please select a statistic:',
             'name': 'statistic',
             'choices': [
@@ -393,23 +392,20 @@ def get_statistic():
 def new_query():
     questions = [
             {
-                'type': 'input',
-                'qmark': '•',
-                'message': 'Would you like to continue with a new query? (Y/N):',
+                'type': 'confirm',
+                'qmark': '●',
+                'message': 'Would you like to continue with a new query?',
                 'name': 'continue',
+                'default': 'invalid'
             }
         ]
 
     answers = prompt(questions, style=style)
-    if answers['continue'] in ['Y', 'y']:
+    if answers['continue'] and answers['continue'] != 'invalid':
         main()
-    elif answers['continue'] in ['N', 'n']:
-        print()
-        f = Figlet(font='slant')
-        print(colored(f.renderText('COVID Visualizer'), colour), end = "")
-        print(colored("Developed by @bhavanvirs on GitHub\n", colour, attrs=['bold']))
+    elif not answers['continue'] and answers['continue'] != 'invalid':
         exit(1)
-    else:
+    elif answers['continue'] == 'invalid':
         print(colored('Error: ' + '\'' + str(answers['continue']) + '\'' + ' is not in the correct format (Y/N).\n', 'red', attrs=['bold']))
         new_query()
 
