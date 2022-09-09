@@ -116,7 +116,7 @@ def generate_main_graph(statistic, dates, values, location):
     location_name, statistic_name = get_location_name(location), get_statistic_name(statistic)
     
     ax = plt.axes()
-    ax.grid(True, linestyle=':')
+    ax.grid(True)
 
     plt.title(statistic_name + ' in ' +  location_name + ' from ' + dates[0] + ' to ' + dates[len(dates) - 1])
     plt.ylabel(statistic_name)
@@ -168,7 +168,7 @@ def fetch_api_data(statistic, location, dates):
         data = response.json()
 
         print(colored("\nSuccess: generating graph...", 'green', attrs=['bold']))
-        for index, item in enumerate(tqdm(data['data'], total=l, desc='Progress', bar_format='{desc}: {percentage:.1f}% Complete |{bar:75}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]')):
+        for index, item in enumerate(tqdm(data['data'], total=l, desc='Progress', bar_format='{desc}: {percentage:.1f}% Complete |{bar:75}| {n_fmt}/{total_fmt} [Elapsed: {elapsed}s, Remaining: {remaining}s]')):
             if item['date'] in dates:
                 values.append(int(item[statistic]))
             if index % 5 == 0:
