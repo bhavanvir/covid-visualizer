@@ -6,15 +6,9 @@ COVID-Visualizer is a command-line interface that allows users to query public C
 
 Several dependencies are required to run the COVID-Visualizer that are not included in the Python Standard Library. It is imperative that these modules are installed and functional beforehand.
 
-Using the package manager [pip](https://pip.pypa.io/en/stable/) to install external modules:
+Using the package manager [pip](https://pip.pypa.io/en/stable/) to install all external modules:
 ```bash
-pip install colorama
-pip install termcolor
-pip install PyInquirer
-pip install tqdm
-pip install requests
-pip install pandas
-pip install matplotlib
+pip install -r requirements.txt
 ```
 Once the external modules have been installed, the source code for COVID-Visualizer can then be obtained using the `git clone` command with the public repository's URL as the target, to make a clone or copy of the repository in a new directory, at another location.
 
