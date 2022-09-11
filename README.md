@@ -4,13 +4,22 @@ COVID-Visualizer is a command-line interface that allows users to query public C
 
 ## Installation
 
-Several dependencies are required to run the COVID-Visualizer that are not included in the Python Standard Library. It is imperative that these modules are installed and functional beforehand.
+The source code for COVID-Visualizer can then be obtained using the `git clone` command with the public repository's URL as the target, to make a clone or copy of the repository in a new directory, at another location.
+```bash
+git clone https://github.com/bhavanvir/COVID-Visualizer
+```
+
+Change your directory to the root of the project.
+```bash
+cd COVID-Visualizer
+```
+
+Several dependencies are required to run COVID-Visualizer that are not included in the Python Standard Library. It is imperative that these modules are installed and functional beforehand.
 
 Using the package manager [pip](https://pip.pypa.io/en/stable/) to install all external modules:
 ```bash
 pip install -r requirements.txt
 ```
-Once the external modules have been installed, the source code for COVID-Visualizer can then be obtained using the `git clone` command with the public repository's URL as the target, to make a clone or copy of the repository in a new directory, at another location.
 
 ## Usage
 
