@@ -5,3 +5,4 @@ PyInquirer==1.0.3
 requests==2.25.0
 termcolor==1.1.0
 tqdm==4.64.0
+prompt_toolkit==1.0.14
